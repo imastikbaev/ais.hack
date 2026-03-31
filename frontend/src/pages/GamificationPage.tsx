@@ -3,6 +3,7 @@ import { gamificationApi } from '../api';
 import type { LeaderboardEntry, ShopItem, PortfolioItem } from '../types';
 import { useState } from 'react';
 import { IconTrophy, IconGift, IconAward, IconStar } from '../components/ui/Icons';
+import { useLangStore, translations } from '../stores/langStore';
 
 function RankBadge({ rank }: { rank: number }) {
   if (rank === 1) return <div className="w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center text-white text-sm font-black">1</div>;
@@ -18,6 +19,8 @@ function PortfolioIcon({ type }: { type: string }) {
 }
 
 export default function GamificationPage() {
+  const { lang } = useLangStore();
+  const t = (k: string) => translations[lang]?.[k] ?? k;
   const qc = useQueryClient();
   const [tab, setTab] = useState<'points' | 'leaderboard' | 'shop' | 'portfolio'>('points');
 
@@ -50,41 +53,41 @@ export default function GamificationPage() {
   });
 
   const tabs = [
-    { key: 'points', label: 'Баллы' },
-    { key: 'leaderboard', label: 'Лидерборд' },
-    { key: 'shop', label: 'Магазин' },
-    { key: 'portfolio', label: 'Портфолио' },
+    { key: 'points', label: t('tab_points') },
+    { key: 'leaderboard', label: t('tab_leaderboard') },
+    { key: 'shop', label: t('tab_shop') },
+    { key: 'portfolio', label: t('tab_portfolio') },
   ];
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="page-title">Достижения</h1>
+        <h1 className="page-title">{t('achievements')}</h1>
         {points && (
           <div className="card py-2 px-4 flex items-center gap-2">
             <IconTrophy className="w-5 h-5 text-primary-600" />
             <div>
               <div className="text-xl font-bold text-primary-600">{points.total_points}</div>
-              <div className="text-xs text-slate-500">баллов</div>
+              <div className="text-xs text-slate-500">{t('points')}</div>
             </div>
           </div>
         )}
       </div>
 
       <div className="flex gap-2">
-        {tabs.map((t) => (
-          <button key={t.key} onClick={() => setTab(t.key as any)}
+        {tabs.map((tb) => (
+          <button key={tb.key} onClick={() => setTab(tb.key as any)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              tab === t.key ? 'bg-primary-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              tab === tb.key ? 'bg-primary-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}>
-            {t.label}
+            {tb.label}
           </button>
         ))}
       </div>
 
       {tab === 'points' && points && (
         <div className="card">
-          <h3 className="font-semibold text-slate-700 mb-4">История начислений</h3>
+          <h3 className="font-semibold text-slate-700 mb-4">{t('points_history')}</h3>
           <div className="space-y-2">
             {points.history.map((h: any) => (
               <div key={h.id} className="flex justify-between items-center py-2 border-b border-slate-50">
@@ -100,7 +103,7 @@ export default function GamificationPage() {
 
       {tab === 'leaderboard' && (
         <div className="card">
-          <h3 className="font-semibold text-slate-700 mb-4">Рейтинг лицея</h3>
+          <h3 className="font-semibold text-slate-700 mb-4">{t('lyceum_rating')}</h3>
           <div className="space-y-2">
             {leaderboard.map((entry) => (
               <div key={entry.student_id} className={`flex items-center gap-3 p-3 rounded-lg ${
@@ -128,13 +131,13 @@ export default function GamificationPage() {
               <div className="font-semibold text-slate-800">{item.name}</div>
               <div className="text-sm text-slate-500 mt-1">{item.description}</div>
               <div className="flex items-center justify-between mt-4">
-                <div className="font-bold text-primary-600">{item.cost} баллов</div>
+                <div className="font-bold text-primary-600">{item.cost} {t('points')}</div>
                 <button
                   onClick={() => buyMutation.mutate(item.id)}
                   disabled={buyMutation.isPending}
                   className="btn-primary py-1.5 px-3 text-sm"
                 >
-                  Купить
+                  {t('buy')}
                 </button>
               </div>
             </div>
@@ -168,7 +171,7 @@ export default function GamificationPage() {
                     <div className="font-semibold text-slate-800">{item.title}</div>
                     {item.description && <div className="text-sm text-slate-500 mt-1">{item.description}</div>}
                     <div className="text-xs text-slate-400 mt-2">{new Date(item.created_at).toLocaleDateString('ru')}</div>
-                    {item.verified_by && <span className="badge-green mt-1">Верифицировано</span>}
+                    {item.verified_by && <span className="badge-green mt-1">{t('verified')}</span>}
                   </div>
                 </div>
               </div>

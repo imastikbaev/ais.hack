@@ -1,17 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
 import { kundelikApi } from '../api/modules';
 import { IconRefresh, IconBookOpen, IconClock } from '../components/ui/Icons';
+import { useLangStore, translations } from '../stores/langStore';
 
-const PERIOD_TIMES = [
-  '08:00','08:55','09:50','10:55','11:50','12:45','14:00'
-];
 
 function DayProgressBar({ done, total, pct }: { done: number; total: number; pct: number }) {
+  const { lang } = useLangStore();
+  const t = (k: string) => translations[lang]?.[k] ?? k;
   return (
     <div className="card">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-slate-700">Прогресс учебного дня</span>
-        <span className="text-sm font-bold text-primary-600">{done}/{total} уроков</span>
+        <span className="text-sm font-medium text-slate-700">{t('day_progress')}</span>
+        <span className="text-sm font-bold text-primary-600">{done}/{total} {t('lessons')}</span>
       </div>
       <div className="w-full bg-slate-100 rounded-full h-3">
         <div
@@ -25,9 +25,11 @@ function DayProgressBar({ done, total, pct }: { done: number; total: number; pct
 }
 
 function CurrentLessonCard({ lesson }: { lesson: any }) {
+  const { lang } = useLangStore();
+  const t = (k: string) => translations[lang]?.[k] ?? k;
   if (!lesson) return (
     <div className="card border-l-4 border-slate-200">
-      <div className="text-slate-400 text-sm">Уроков сегодня нет</div>
+      <div className="text-slate-400 text-sm">{t('no_lessons_today')}</div>
     </div>
   );
   return (
@@ -36,8 +38,8 @@ function CurrentLessonCard({ lesson }: { lesson: any }) {
         <div>
           <div className="flex items-center gap-1.5 text-xs font-medium text-slate-500 mb-1">
             {lesson.status === 'in_progress'
-              ? <><span className="w-2 h-2 rounded-full bg-green-500 inline-block" /> Сейчас идёт</>
-              : <><IconClock className="w-3.5 h-3.5" /> Следующий урок</>
+              ? <><span className="w-2 h-2 rounded-full bg-green-500 inline-block" /> {t('current_lesson')}</>
+              : <><IconClock className="w-3.5 h-3.5" /> {t('next_lesson')}</>
             }
           </div>
           <div className="text-lg font-bold text-slate-800">{lesson.subject_name}</div>
@@ -48,7 +50,7 @@ function CurrentLessonCard({ lesson }: { lesson: any }) {
         {lesson.status === 'in_progress' && (
           <div className="text-right">
             <div className="text-2xl font-black text-green-600">{lesson.progress_pct}%</div>
-            <div className="text-xs text-slate-400">прошло</div>
+            <div className="text-xs text-slate-400">{t('passed')}</div>
           </div>
         )}
       </div>
@@ -65,6 +67,8 @@ function CurrentLessonCard({ lesson }: { lesson: any }) {
 }
 
 export default function KundelikPage() {
+  const { lang } = useLangStore();
+  const t = (k: string) => translations[lang]?.[k] ?? k;
   const { data: progress } = useQuery({
     queryKey: ['day-progress'],
     queryFn: () => kundelikApi.dayProgress().then(r => r.data),
@@ -85,14 +89,14 @@ export default function KundelikPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="page-title">Kundelik</h1>
-          <p className="text-slate-500 text-sm">Расписание и домашние задания</p>
+          <p className="text-slate-500 text-sm">{t('today_schedule')} &amp; {t('homework').toLowerCase()}</p>
         </div>
         <button
           onClick={() => kundelikApi.sync()}
           className="btn-secondary text-sm flex items-center gap-2"
         >
           <IconRefresh className="w-4 h-4" />
-          Синхронизировать
+          {t('sync')}
         </button>
       </div>
 
@@ -104,7 +108,7 @@ export default function KundelikPage() {
 
       {progress?.lessons?.length > 0 && (
         <div className="card">
-          <h3 className="font-semibold text-slate-700 mb-4">Расписание на сегодня</h3>
+          <h3 className="font-semibold text-slate-700 mb-4">{t('today_schedule')}</h3>
           <div className="space-y-2">
             {progress.lessons.map((lesson: any) => (
               <div key={lesson.period_num}
@@ -118,7 +122,7 @@ export default function KundelikPage() {
                 <div className="text-xs text-slate-400 w-20">{lesson.start_time}</div>
                 <div className="flex-1 font-medium text-slate-800">{lesson.subject_name}</div>
                 <div className="text-xs text-slate-500">{lesson.room}</div>
-                {lesson.is_cancelled && <span className="badge-red">Отменён</span>}
+                {lesson.is_cancelled && <span className="badge-red">{t('cancelled')}</span>}
               </div>
             ))}
           </div>
@@ -128,7 +132,7 @@ export default function KundelikPage() {
       <div className="card">
         <h3 className="font-semibold text-slate-700 mb-4 flex items-center gap-2">
           <IconBookOpen className="w-4 h-4" />
-          Домашние задания
+          {t('homework')}
         </h3>
         <div className="space-y-3">
           {(homework as any[]).map((hw: any) => (

@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
+import { useLangStore, translations, type Lang } from '../../stores/langStore';
 import {
   IconHome, IconBarChart, IconTrendUp, IconCalendar, IconBookOpen,
   IconHeart, IconCoin, IconTrophy, IconLogOut,
@@ -8,36 +9,37 @@ import {
 
 interface NavItem {
   path: string;
-  label: string;
+  labelKey: string;
   icon: React.ReactNode;
 }
 
 interface NavGroup {
-  label?: string;
+  labelKey?: string;
   items: NavItem[];
 }
 
 const studentGroups: NavGroup[] = [
   {
     items: [
-      { path: '/student', label: 'Главная', icon: <IconHome /> },
+      { path: '/student', labelKey: 'home', icon: <IconHome /> },
     ],
   },
   {
-    label: 'Учёба',
+    labelKey: 'study',
     items: [
-      { path: '/student/grades',   label: 'Оценки',       icon: <IconBarChart /> },
-      { path: '/student/ai',       label: 'Успеваемость', icon: <IconTrendUp /> },
-      { path: '/student/schedule', label: 'Расписание',   icon: <IconCalendar /> },
-      { path: '/student/kundelik', label: 'Kundelik',     icon: <IconBookOpen /> },
+      { path: '/student/grades',   labelKey: 'grades',       icon: <IconBarChart /> },
+      { path: '/student/ai',       labelKey: 'performance',  icon: <IconTrendUp /> },
+      { path: '/student/schedule', labelKey: 'schedule',     icon: <IconCalendar /> },
+      { path: '/student/kundelik', labelKey: 'kundelik',     icon: <IconBookOpen /> },
     ],
   },
   {
-    label: 'Школьная жизнь',
+    labelKey: 'school_life',
     items: [
-      { path: '/student/wellness',      label: 'Тесты',       icon: <IconHeart /> },
-      { path: '/student/currency',      label: 'Буфет',       icon: <IconCoin /> },
-      { path: '/student/gamification',  label: 'Достижения',  icon: <IconTrophy /> },
+      { path: '/student/nisgram',       labelKey: 'nisgram',      icon: <IconNewspaper /> },
+      { path: '/student/wellness',      labelKey: 'wellness',     icon: <IconHeart /> },
+      { path: '/student/currency',      labelKey: 'canteen',      icon: <IconCoin /> },
+      { path: '/student/gamification',  labelKey: 'achievements', icon: <IconTrophy /> },
     ],
   },
 ];
@@ -45,16 +47,16 @@ const studentGroups: NavGroup[] = [
 const teacherGroups: NavGroup[] = [
   {
     items: [
-      { path: '/teacher', label: 'Главная', icon: <IconHome /> },
+      { path: '/teacher', labelKey: 'home', icon: <IconHome /> },
     ],
   },
   {
-    label: 'Учебный процесс',
+    labelKey: 'edu_process',
     items: [
-      { path: '/teacher/grades',    label: 'Оценки',     icon: <IconStar /> },
-      { path: '/teacher/materials', label: 'Материалы',  icon: <IconBriefcase /> },
-      { path: '/teacher/analytics', label: 'Аналитика',  icon: <IconBarChart /> },
-      { path: '/teacher/schedule',  label: 'Расписание', icon: <IconCalendar /> },
+      { path: '/teacher/grades',    labelKey: 'grades',      icon: <IconStar /> },
+      { path: '/teacher/materials', labelKey: 'materials',   icon: <IconBriefcase /> },
+      { path: '/teacher/analytics', labelKey: 'analytics',   icon: <IconBarChart /> },
+      { path: '/teacher/schedule',  labelKey: 'schedule',    icon: <IconCalendar /> },
     ],
   },
 ];
@@ -62,13 +64,13 @@ const teacherGroups: NavGroup[] = [
 const parentGroups: NavGroup[] = [
   {
     items: [
-      { path: '/parent', label: 'Главная', icon: <IconHome /> },
+      { path: '/parent', labelKey: 'home', icon: <IconHome /> },
     ],
   },
   {
-    label: 'Мои дети',
+    labelKey: 'my_children',
     items: [
-      { path: '/parent', label: 'Успеваемость', icon: <IconBarChart /> },
+      { path: '/parent', labelKey: 'performance', icon: <IconBarChart /> },
     ],
   },
 ];
@@ -76,15 +78,15 @@ const parentGroups: NavGroup[] = [
 const adminGroups: NavGroup[] = [
   {
     items: [
-      { path: '/admin', label: 'Главная', icon: <IconHome /> },
+      { path: '/admin', labelKey: 'home', icon: <IconHome /> },
     ],
   },
   {
-    label: 'Управление',
+    labelKey: 'management',
     items: [
-      { path: '/admin/schedule', label: 'Расписание', icon: <IconCalendar /> },
-      { path: '/admin/news',     label: 'Новости',    icon: <IconNewspaper /> },
-      { path: '/admin/reports',  label: 'Отчёты',     icon: <IconClipboard /> },
+      { path: '/admin/schedule', labelKey: 'schedule', icon: <IconCalendar /> },
+      { path: '/admin/news',     labelKey: 'news',     icon: <IconNewspaper /> },
+      { path: '/admin/reports',  labelKey: 'reports',  icon: <IconClipboard /> },
     ],
   },
 ];
@@ -96,17 +98,17 @@ function roleGroups(role: string): NavGroup[] {
   return studentGroups;
 }
 
-function roleName(role: string) {
-  if (role === 'teacher') return 'Учитель';
-  if (role === 'admin')   return 'Администратор';
-  if (role === 'kiosk')   return 'Стенд';
-  if (role === 'parent')  return 'Родитель';
-  return 'Ученик';
-}
+const LANGS: { code: Lang; label: string }[] = [
+  { code: 'ru', label: 'RU' },
+  { code: 'kz', label: 'KZ' },
+  { code: 'en', label: 'EN' },
+];
 
 export default function Sidebar() {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
+  const { lang, setLang } = useLangStore();
+  const t = (key: string) => translations[lang]?.[key] ?? key;
 
   if (!user) return null;
 
@@ -115,6 +117,8 @@ export default function Sidebar() {
     const last = user.name.split(' ').at(-1) ?? '';
     return /^\d+$/.test(last) ? last : user.name.charAt(0);
   })();
+
+  const roleKey = `role_${user.role}` as const;
 
   return (
     <aside className="w-64 min-h-screen flex flex-col" style={{ backgroundColor: '#11001d' }}>
@@ -126,7 +130,7 @@ export default function Sidebar() {
           </div>
           <div>
             <div className="text-white font-bold text-sm leading-tight">Aqbobek Lyceum</div>
-            <div className="text-slate-400 text-xs mt-0.5">{roleName(user.role)}</div>
+            <div className="text-slate-400 text-xs mt-0.5">{t(roleKey)}</div>
           </div>
         </div>
       </div>
@@ -148,9 +152,9 @@ export default function Sidebar() {
       <nav className="flex-1 px-3 py-3 space-y-4 overflow-y-auto">
         {groups.map((group, gi) => (
           <div key={gi}>
-            {group.label && (
+            {group.labelKey && (
               <div className="px-3 mb-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                {group.label}
+                {t(group.labelKey)}
               </div>
             )}
             <div className="space-y-0.5">
@@ -168,7 +172,7 @@ export default function Sidebar() {
                   }
                 >
                   <span className="w-4 h-4 flex-shrink-0">{item.icon}</span>
-                  <span>{item.label}</span>
+                  <span>{item.labelKey === 'kundelik' ? 'Kundelik' : t(item.labelKey)}</span>
                 </NavLink>
               ))}
             </div>
@@ -176,14 +180,33 @@ export default function Sidebar() {
         ))}
       </nav>
 
+      {/* Language switcher */}
+      <div className="px-4 py-3 border-t border-white/10">
+        <div className="flex gap-1 bg-white/5 rounded-lg p-1">
+          {LANGS.map(({ code, label }) => (
+            <button
+              key={code}
+              onClick={() => setLang(code)}
+              className={`flex-1 py-1 rounded-md text-xs font-semibold transition-colors ${
+                lang === code
+                  ? 'bg-primary-600 text-white'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Logout */}
-      <div className="px-3 py-3 border-t border-white/10">
+      <div className="px-3 pb-3">
         <button
           onClick={() => { logout(); navigate('/login'); }}
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:bg-red-500/20 hover:text-red-300 transition-colors w-full"
         >
           <IconLogOut />
-          <span>Выйти</span>
+          <span>{t('logout')}</span>
         </button>
       </div>
     </aside>

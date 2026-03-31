@@ -12,12 +12,6 @@ const GRADE_COLOR = (v: number) => {
   return 'bg-red-100 text-red-800';
 };
 
-const NUM_COLOR = (v: number) => {
-  if (v >= 4.5) return 'text-green-600';
-  if (v >= 3.5) return 'text-blue-600';
-  if (v >= 2.5) return 'text-yellow-600';
-  return 'text-red-600';
-};
 
 type ClassStudent = { student_id: number; student_name: string; average: number; grades: any[] };
 

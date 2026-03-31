@@ -127,7 +127,7 @@ export default function TeacherAnalytics() {
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="name" tick={{ fontSize: 11 }} />
               <YAxis domain={[0, 5]} ticks={[1, 2, 3, 4, 5]} tick={{ fontSize: 11 }} />
-              <Tooltip formatter={(v: number, _: string, props: any) => [v.toFixed(2), props.payload.fullName]} />
+              <Tooltip formatter={(v: any, _: any, props: any) => [Number(v).toFixed(2), props.payload?.fullName ?? '']} />
               <Bar dataKey="avg" radius={[4, 4, 0, 0]}>
                 {subjectChartData.map((entry) => (
                   <Cell key={entry.name} fill={avgColor(entry.avg)} />

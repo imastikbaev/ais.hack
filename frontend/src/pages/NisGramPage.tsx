@@ -3,6 +3,7 @@ import { nisgramApi } from '../api/modules';
 import { useState } from 'react';
 import { useAuthStore } from '../stores/authStore';
 import { IconHeart, IconClock } from '../components/ui/Icons';
+import { useLangStore, translations } from '../stores/langStore';
 
 const TAG_COLORS: Record<string, string> = {
   'Олимпиада': 'bg-yellow-100 text-yellow-700',
@@ -13,6 +14,8 @@ const TAG_COLORS: Record<string, string> = {
 };
 
 function PostCard({ post, onLike }: { post: any; onLike: () => void }) {
+  const { lang } = useLangStore();
+  const t = (k: string) => translations[lang]?.[k] ?? k;
   return (
     <div className="card hover:shadow-md transition-shadow">
       {post.image_url && (
@@ -32,7 +35,7 @@ function PostCard({ post, onLike }: { post: any; onLike: () => void }) {
         <div>
           <div className="text-sm font-medium text-slate-700">{post.student_name}</div>
           {post.mentor_name && (
-            <div className="text-xs text-slate-400">Наставник: {post.mentor_name}</div>
+            <div className="text-xs text-slate-400">{t('mentor')}: {post.mentor_name}</div>
           )}
         </div>
         <button
@@ -48,6 +51,8 @@ function PostCard({ post, onLike }: { post: any; onLike: () => void }) {
 }
 
 export default function NisGramPage() {
+  const { lang } = useLangStore();
+  const t = (k: string) => translations[lang]?.[k] ?? k;
   const { user } = useAuthStore();
   const qc = useQueryClient();
   const [activeTag, setActiveTag] = useState<string | undefined>();
@@ -90,17 +95,17 @@ export default function NisGramPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="page-title">Лента достижений</h1>
-          <p className="text-slate-500 text-sm">Успехи и достижения учеников лицея</p>
+          <h1 className="page-title">{t('achievements_feed')}</h1>
+          <p className="text-slate-500 text-sm">{t('feed_subtitle')}</p>
         </div>
         <button onClick={() => setShowCreateForm(!showCreateForm)} className="btn-primary">
-          + Добавить достижение
+          {t('add_achievement')}
         </button>
       </div>
 
       {showCreateForm && (
         <div className="card border-l-4 border-primary-500">
-          <h3 className="font-semibold text-slate-700 mb-4">Новое достижение</h3>
+          <h3 className="font-semibold text-slate-700 mb-4">{t('new_achievement')}</h3>
           <div className="space-y-3">
             <input className="input" placeholder="Заголовок" value={newPost.title}
               onChange={e => setNewPost({ ...newPost, title: e.target.value })} />
@@ -111,10 +116,10 @@ export default function NisGramPage() {
               {(tags as any[]).map((tag: any) => (
                 <button key={tag.name}
                   onClick={() => {
-                    const t = newPost.tags.includes(tag.name)
+                    const tg = newPost.tags.includes(tag.name)
                       ? newPost.tags.filter(x => x !== tag.name)
                       : [...newPost.tags, tag.name];
-                    setNewPost({ ...newPost, tags: t });
+                    setNewPost({ ...newPost, tags: tg });
                   }}
                   className={`badge cursor-pointer ${newPost.tags.includes(tag.name) ? 'bg-primary-500 text-white' : 'bg-slate-100 text-slate-600'}`}
                 >
@@ -124,7 +129,7 @@ export default function NisGramPage() {
             </div>
             <button onClick={() => createMutation.mutate()} disabled={!newPost.title || createMutation.isPending}
               className="btn-primary">
-              Отправить на модерацию
+              {t('submit_moderation')}
             </button>
           </div>
         </div>
@@ -134,7 +139,7 @@ export default function NisGramPage() {
         <div className="card border border-orange-200 bg-orange-50">
           <h3 className="font-semibold text-orange-700 mb-3 flex items-center gap-2">
             <IconClock className="w-4 h-4" />
-            Ожидают модерации ({(pending as any[]).length})
+            {t('pending_moderation')} ({(pending as any[]).length})
           </h3>
           <div className="space-y-3">
             {(pending as any[]).map((p: any) => (
@@ -145,9 +150,9 @@ export default function NisGramPage() {
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => moderateMutation.mutate({ id: p.id, action: 'approve' })}
-                    className="btn-primary py-1 px-3 text-sm">Принять</button>
+                    className="btn-primary py-1 px-3 text-sm">{t('approve')}</button>
                   <button onClick={() => moderateMutation.mutate({ id: p.id, action: 'reject' })}
-                    className="btn-danger py-1 px-3 text-sm">Отклонить</button>
+                    className="btn-danger py-1 px-3 text-sm">{t('reject')}</button>
                 </div>
               </div>
             ))}
@@ -158,7 +163,7 @@ export default function NisGramPage() {
       <div className="flex gap-2 flex-wrap">
         <button onClick={() => setActiveTag(undefined)}
           className={`badge cursor-pointer px-3 py-1 ${!activeTag ? 'bg-primary-500 text-white' : 'bg-slate-100 text-slate-600'}`}>
-          Все
+          {t('all')}
         </button>
         {(tags as any[]).map((tag: any) => (
           <button key={tag.name} onClick={() => setActiveTag(tag.name === activeTag ? undefined : tag.name)}
@@ -173,7 +178,7 @@ export default function NisGramPage() {
           <PostCard key={post.id} post={post} onLike={() => likeMutation.mutate(post.id)} />
         ))}
         {(feed as any[]).length === 0 && (
-          <div className="col-span-3 text-center text-slate-400 py-10">Пока нет публикаций</div>
+          <div className="col-span-3 text-center text-slate-400 py-10">{t('no_posts')}</div>
         )}
       </div>
     </div>

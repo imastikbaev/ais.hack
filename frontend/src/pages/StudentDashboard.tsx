@@ -3,15 +3,20 @@ import { gradesApi } from '../api';
 import { useAuthStore } from '../stores/authStore';
 import { RadarChart, PolarGrid, PolarAngleAxis, Radar, ResponsiveContainer } from 'recharts';
 import type { StudentAnalytics } from '../types';
+import { useLangStore, translations } from '../stores/langStore';
 
 function GradeBadge({ avg }: { avg: number }) {
-  if (avg >= 4.5) return <span className="badge-green">Отличник</span>;
-  if (avg >= 3.8) return <span className="badge-blue">Хорошист</span>;
-  if (avg >= 3.0) return <span className="badge-orange">Справляется</span>;
-  return <span className="badge-red">Нужна помощь</span>;
+  const { lang } = useLangStore();
+  const t = (k: string) => translations[lang]?.[k] ?? k;
+  if (avg >= 4.5) return <span className="badge-green">{t('excellent')}</span>;
+  if (avg >= 3.8) return <span className="badge-blue">{t('good')}</span>;
+  if (avg >= 3.0) return <span className="badge-orange">{t('ok')}</span>;
+  return <span className="badge-red">{t('help')}</span>;
 }
 
 export default function StudentDashboard() {
+  const { lang } = useLangStore();
+  const t = (k: string) => translations[lang]?.[k] ?? k;
   const { user } = useAuthStore();
   const { data: analytics, isLoading } = useQuery<StudentAnalytics>({
     queryKey: ['my-analytics'],
@@ -67,23 +72,23 @@ export default function StudentDashboard() {
             {overallAvg.toFixed(1)}
           </div>
           <div>
-            <div className="text-xs text-slate-500 mb-0.5">Средний балл</div>
+            <div className="text-xs text-slate-500 mb-0.5">{t('avg_grade')}</div>
             <div className="text-sm text-slate-600">
-              {improving > 0 && <span className="text-green-600 font-medium">↑{improving} растут </span>}
-              {declining > 0 && <span className="text-red-500 font-medium">↓{declining} падают</span>}
-              {improving === 0 && declining === 0 && <span className="text-slate-400">Стабильно</span>}
+              {improving > 0 && <span className="text-green-600 font-medium">↑{improving} {t('growing')} </span>}
+              {declining > 0 && <span className="text-red-500 font-medium">↓{declining} {t('falling')}</span>}
+              {improving === 0 && declining === 0 && <span className="text-slate-400">{t('stable')}</span>}
             </div>
           </div>
         </div>
 
         <div className="card border-l-4 border-l-green-400">
-          <div className="text-xs text-slate-500 mb-0.5">Лучший предмет</div>
+          <div className="text-xs text-slate-500 mb-0.5">{t('best_subject')}</div>
           <div className="font-semibold text-green-700">{topSubject?.subject_name}</div>
           <div className="text-3xl font-bold text-slate-800">{topSubject?.average.toFixed(1)}</div>
         </div>
 
         <div className="card border-l-4 border-l-orange-400">
-          <div className="text-xs text-slate-500 mb-0.5">Нужно подтянуть</div>
+          <div className="text-xs text-slate-500 mb-0.5">{t('needs_work')}</div>
           <div className="font-semibold text-orange-600">{worstSubject?.subject_name}</div>
           <div className="text-3xl font-bold text-slate-800">{worstSubject?.average.toFixed(1)}</div>
         </div>
@@ -92,7 +97,7 @@ export default function StudentDashboard() {
       {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className="card">
-          <h3 className="section-title">Радар успеваемости</h3>
+          <h3 className="section-title">{t('radar')}</h3>
           <ResponsiveContainer width="100%" height={200}>
             <RadarChart data={radarData}>
               <PolarGrid />
@@ -103,7 +108,7 @@ export default function StudentDashboard() {
         </div>
 
         <div className="card">
-          <h3 className="section-title">Оценки по предметам</h3>
+          <h3 className="section-title">{t('grades_by_subject')}</h3>
           <div className="space-y-3">
             {[...subjects]
               .sort((a, b) => b.average - a.average)
@@ -129,10 +134,10 @@ export default function StudentDashboard() {
 
       {analytics.high_risk_subjects.length > 0 && (
         <div className="card border-l-4 border-l-orange-400 bg-orange-50/50">
-          <h3 className="font-semibold text-slate-800 mb-1">Обрати внимание</h3>
+          <h3 className="font-semibold text-slate-800 mb-1">{t('pay_attention')}</h3>
           <p className="text-sm text-slate-600">
             Средний балл ниже 3.5 по: <strong className="text-orange-700">{analytics.high_risk_subjects.join(', ')}</strong>.
-            Загляни в раздел «Успеваемость», чтобы разобраться с пробелами.
+            {t('check_performance')}, чтобы разобраться с пробелами.
           </p>
         </div>
       )}

@@ -2,8 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuthStore } from '../stores/authStore';
 import { newsApi, scheduleApi } from '../api';
 import { IconBarChart, IconCalendar, IconNewspaper, IconStar, IconBriefcase } from '../components/ui/Icons';
+import { useLangStore, translations } from '../stores/langStore';
 
 export default function TeacherDashboard() {
+  const { lang } = useLangStore();
+  const t = (k: string) => translations[lang]?.[k] ?? k;
   const { user } = useAuthStore();
 
   const { data: news = [] } = useQuery({
@@ -29,14 +32,14 @@ export default function TeacherDashboard() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="page-title">Добрый день, {user?.name}!</h1>
+          <h1 className="page-title">{t('good_day')}, {user?.name}!</h1>
           <p className="page-subtitle">
             {new Date().toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
         </div>
         <div className="text-right">
           <div className="text-3xl font-bold text-slate-800">{(slots as any[]).length}</div>
-          <div className="text-xs text-slate-500">уроков в неделю</div>
+          <div className="text-xs text-slate-500">{t('lessons_per_week')}</div>
         </div>
       </div>
 
@@ -45,10 +48,10 @@ export default function TeacherDashboard() {
         <div className="card border-t-4 border-t-primary-500 lg:col-span-2">
           <div className="flex items-center gap-2 mb-3">
             <IconCalendar className="w-4 h-4 text-primary-500" />
-            <h3 className="font-semibold text-slate-700 text-sm">Уроки сегодня</h3>
+            <h3 className="font-semibold text-slate-700 text-sm">{t('lessons_today')}</h3>
           </div>
           {todaySlots.length === 0 ? (
-            <p className="text-sm text-slate-400">Сегодня уроков нет</p>
+            <p className="text-sm text-slate-400">{t('no_lessons')}</p>
           ) : (
             <div className="space-y-2">
               {todaySlots.slice(0, 5).map((s: any) => (
@@ -68,19 +71,19 @@ export default function TeacherDashboard() {
         <div className="card border-t-4 border-t-green-500 flex flex-col">
           <div className="flex items-center gap-2 mb-2">
             <IconStar className="w-4 h-4 text-green-500" />
-            <h3 className="font-semibold text-slate-700 text-sm">Оценки</h3>
+            <h3 className="font-semibold text-slate-700 text-sm">{t('grades')}</h3>
           </div>
-          <p className="text-xs text-slate-500 mb-3 flex-1">Выставить оценки ученикам по классу</p>
-          <a href="/teacher/grades" className="btn-primary text-sm inline-block text-center">Открыть</a>
+          <p className="text-xs text-slate-500 mb-3 flex-1">{t('grade_students')}</p>
+          <a href="/teacher/grades" className="btn-primary text-sm inline-block text-center">{t('open')}</a>
         </div>
 
         <div className="card border-t-4 border-t-orange-500 flex flex-col">
           <div className="flex items-center gap-2 mb-2">
             <IconBriefcase className="w-4 h-4 text-orange-500" />
-            <h3 className="font-semibold text-slate-700 text-sm">Материалы</h3>
+            <h3 className="font-semibold text-slate-700 text-sm">{t('materials')}</h3>
           </div>
-          <p className="text-xs text-slate-500 mb-3 flex-1">Загрузить учебные материалы и ДЗ</p>
-          <a href="/teacher/materials" className="btn-primary text-sm inline-block text-center">Открыть</a>
+          <p className="text-xs text-slate-500 mb-3 flex-1">{t('upload_materials')}</p>
+          <a href="/teacher/materials" className="btn-primary text-sm inline-block text-center">{t('open')}</a>
         </div>
       </div>
 
@@ -88,19 +91,19 @@ export default function TeacherDashboard() {
         <div className="card border-t-4 border-t-blue-500">
           <div className="flex items-center gap-2 mb-2">
             <IconBarChart className="w-4 h-4 text-blue-500" />
-            <h3 className="font-semibold text-slate-700 text-sm">Аналитика класса</h3>
+            <h3 className="font-semibold text-slate-700 text-sm">{t('class_analytics')}</h3>
           </div>
-          <p className="text-xs text-slate-500 mb-3">Успеваемость учеников, слабые предметы, динамика</p>
-          <a href="/teacher/analytics" className="btn-primary text-sm inline-block">Открыть</a>
+          <p className="text-xs text-slate-500 mb-3">{t('student_performance')}</p>
+          <a href="/teacher/analytics" className="btn-primary text-sm inline-block">{t('open')}</a>
         </div>
 
         <div className="card border-t-4 border-t-purple-500">
           <div className="flex items-center gap-2 mb-2">
             <IconCalendar className="w-4 h-4 text-purple-500" />
-            <h3 className="font-semibold text-slate-700 text-sm">Расписание</h3>
+            <h3 className="font-semibold text-slate-700 text-sm">{t('schedule')}</h3>
           </div>
           <p className="text-xs text-slate-500 mb-3">Моё расписание по классам, оформление замен</p>
-          <a href="/teacher/schedule" className="btn-primary text-sm inline-block">Открыть</a>
+          <a href="/teacher/schedule" className="btn-primary text-sm inline-block">{t('open')}</a>
         </div>
       </div>
 
@@ -108,7 +111,7 @@ export default function TeacherDashboard() {
       <div className="card">
         <div className="flex items-center gap-2 mb-4">
           <IconNewspaper className="w-4 h-4 text-slate-500" />
-          <h3 className="section-title mb-0">Объявления и новости</h3>
+          <h3 className="section-title mb-0">{t('announcements')}</h3>
         </div>
         <div className="divide-y divide-slate-100">
           {(news as any[]).slice(0, 5).map((n: any) => (

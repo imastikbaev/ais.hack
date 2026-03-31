@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import type { ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { scheduleApi } from '../api';
 
@@ -16,7 +17,7 @@ type Material = {
   uploadedAt: string;
 };
 
-const TYPE_META: Record<MaterialType, { label: string; icon: JSX.Element; badge: string }> = {
+const TYPE_META: Record<MaterialType, { label: string; icon: ReactNode; badge: string }> = {
   presentation: {
     label: 'Презентация',
     badge: 'bg-blue-100 text-blue-800',

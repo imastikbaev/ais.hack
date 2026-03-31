@@ -8,9 +8,62 @@ from app.core.security import get_current_user, require_roles
 from app.models.user import User
 from app.models.grade import Grade
 from app.models.subject import Subject, Topic
+from app.models.gamification import GamificationPoint
 from app.schemas.grades import GradeOut
 
 router = APIRouter(prefix="/grades", tags=["grades"])
+
+SUBJECT_RESOURCES: dict = {
+    "Математика": [
+        {"title": "Алгебра — Khan Academy (RU)", "url": "https://ru.khanacademy.org/math/algebra"},
+        {"title": "ЕГЭ математика — видеоуроки", "url": "https://www.youtube.com/c/mathege"},
+    ],
+    "Физика": [
+        {"title": "Физика — основы механики", "url": "https://www.youtube.com/watch?v=ZM8ECpBuQYE"},
+        {"title": "Законы Ньютона — fizmat.by", "url": "https://fizmat.by/kursy/newton"},
+    ],
+    "Химия": [
+        {"title": "Химия с нуля — videouroki.net", "url": "https://videouroki.net/video/himiya.html"},
+        {"title": "Периодическая таблица интерактивно", "url": "https://ptable.com/?lang=ru"},
+    ],
+    "Английский язык": [
+        {"title": "English Grammar in Use — British Council", "url": "https://learnenglish.britishcouncil.org/grammar"},
+        {"title": "Academic Vocabulary — vocabulary.com", "url": "https://www.vocabulary.com"},
+    ],
+    "Казахский язык": [
+        {"title": "Казахский язык онлайн — soyle.kz", "url": "https://soyle.kz"},
+        {"title": "Грамматика казахского — учебные видео", "url": "https://www.youtube.com/results?search_query=казахский+грамматика"},
+    ],
+    "История Казахстана": [
+        {"title": "История Казахстана — bilim.kz", "url": "https://bilim.kz/kz/history"},
+        {"title": "Хронология событий — wikipedia", "url": "https://ru.wikipedia.org/wiki/История_Казахстана"},
+    ],
+    "Биология": [
+        {"title": "Биология — Khan Academy", "url": "https://ru.khanacademy.org/science/biology"},
+        {"title": "Анатомия человека — видеоуроки", "url": "https://www.youtube.com/results?search_query=анатомия+человека+урок"},
+    ],
+    "География": [
+        {"title": "Интерактивные карты — geo.rocks", "url": "https://geo.rocks"},
+        {"title": "Физическая география — videouroki.net", "url": "https://videouroki.net/video/geografiya.html"},
+    ],
+    "Информатика": [
+        {"title": "Python для начинающих — stepik.org", "url": "https://stepik.org/course/67/promo"},
+        {"title": "CS50 на русском — YouTube", "url": "https://www.youtube.com/results?search_query=cs50+русский"},
+    ],
+}
+
+DEFAULT_RESOURCES = [
+    {"title": "Видеоуроки по всем предметам — videouroki.net", "url": "https://videouroki.net"},
+    {"title": "Учебные материалы — bilim.kz", "url": "https://bilim.kz"},
+]
+
+
+def _recommendations_for(subject_name: str, risk_score: float) -> list:
+    if risk_score < 0.3:
+        return []
+    resources = SUBJECT_RESOURCES.get(subject_name, DEFAULT_RESOURCES)
+    return resources[:2]
+
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -56,6 +109,48 @@ def _subject_stats(grades: list) -> dict:
 
 
 # ── Student grades ─────────────────────────────────────────────────────────────
+
+# points awarded per grade value (only for СОЧ/СОР)
+GRADE_POINTS = {5: 100, 4: 50}
+
+@router.post("/add")
+async def add_grade(
+    student_id: int,
+    subject_id: int,
+    value: float,
+    grade_type: str = "current",
+    topic_id: Optional[int] = None,
+    quarter: Optional[int] = None,
+    current_user: User = Depends(require_roles("teacher", "admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    from datetime import date
+    grade = Grade(
+        student_id=student_id,
+        subject_id=subject_id,
+        value=value,
+        grade_type=grade_type,
+        topic_id=topic_id,
+        quarter=quarter or 1,
+        date=date.today(),
+    )
+    db.add(grade)
+
+    # auto-award gamification points for high grades
+    pts = GRADE_POINTS.get(int(value))
+    if pts and grade_type in ("СОЧ", "СОР", "current"):
+        subj = await db.get(Subject, subject_id)
+        subj_name = subj.name if subj else f"предмет {subject_id}"
+        point = GamificationPoint(
+            student_id=student_id,
+            points=pts,
+            reason=f"Оценка {int(value)} по {subj_name} ({grade_type})",
+        )
+        db.add(point)
+
+    await db.commit()
+    return {"message": "Grade added", "points_awarded": pts or 0}
+
 
 @router.get("/my", response_model=List[GradeOut])
 async def get_my_grades(
@@ -127,9 +222,9 @@ async def get_my_analytics(
             "average": stats["average"],
             "trend_score": stats["average"],      # kept for compat
             "trend_slope": stats["trend_slope"],
-            "risk_score": stats["needs_attention"],  # kept for compat (is 0..1 grade-based)
+            "risk_score": stats["needs_attention"],
             "gap_topic_ids": stats["weak_topic_ids"],
-            "recommendations": [],
+            "recommendations": _recommendations_for(subj.name, stats["needs_attention"]),
             "grades_count": stats["grades_count"],
         })
 
