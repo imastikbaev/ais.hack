@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Purple theme overrides ──────────────────────────────── */
+:root {
+  --p-50:  #fdf5ff;
+  --p-100: #f5e3ff;
+  --p-200: #e8c2ff;
+  --p-300: #d491ff;
+  --p-400: #b558e8;
+  --p-500: #8b1fc8;
+  --p-600: #58058C;
+  --p-700: #430069;
+  --p-800: #2d0047;
+  --p-900: #1a002a;
+}
+
+/* Background */
+.bg-primary-50  { background-color: var(--p-50)  !important; }
+.bg-primary-100 { background-color: var(--p-100) !important; }
+.bg-primary-200 { background-color: var(--p-200) !important; }
+.bg-primary-300 { background-color: var(--p-300) !important; }
+.bg-primary-400 { background-color: var(--p-400) !important; }
+.bg-primary-500 { background-color: var(--p-500) !important; }
+.bg-primary-600 { background-color: var(--p-600) !important; }
+.bg-primary-700 { background-color: var(--p-700) !important; }
+.bg-primary-800 { background-color: var(--p-800) !important; }
+.bg-primary-900 { background-color: var(--p-900) !important; }
+
+/* Text */
+.text-primary-300 { color: var(--p-300) !important; }
+.text-primary-400 { color: var(--p-400) !important; }
+.text-primary-500 { color: var(--p-500) !important; }
+.text-primary-600 { color: var(--p-600) !important; }
+.text-primary-700 { color: var(--p-700) !important; }
+
+/* Border */
+.border-primary-100 { border-color: var(--p-100) !important; }
+.border-primary-200 { border-color: var(--p-200) !important; }
+.border-primary-300 { border-color: var(--p-300) !important; }
+.border-primary-400 { border-color: var(--p-400) !important; }
+.border-primary-500 { border-color: var(--p-500) !important; }
+.border-l-primary-500 { border-left-color: var(--p-500) !important; }
+
+/* Ring / focus */
+.ring-primary-400, .focus\:ring-primary-400:focus { --tw-ring-color: var(--p-400) !important; }
+.focus\:ring-2:focus { --tw-ring-color: var(--p-400); }
+
+/* Opacity variants used in sidebar active state */
+[class*="bg-primary-600"] { background-color: var(--p-600) !important; }
+[class*="hover\:bg-primary-700"]:hover { background-color: var(--p-700) !important; }
+/* ─────────────────────────────────────────────────────────── */
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: #f7f4fa;
+  color: #0f172a;
+}
+
+#root {
+  min-height: 100vh;
+  width: 100%;
+  text-align: left;
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-slate-200 p-5;
+  }
+  .card-accent {
+    @apply card border-l-4 border-l-primary-500;
+  }
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors cursor-pointer;
+  }
+  .btn-secondary {
+    @apply bg-white hover:bg-slate-50 text-slate-700 font-medium px-4 py-2 rounded-lg border border-slate-300 transition-colors;
+  }
+  .btn-danger {
+    @apply bg-danger-500 hover:bg-danger-600 text-white font-medium px-4 py-2 rounded-lg transition-colors;
+  }
+  .input {
+    @apply border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent w-full bg-white;
+  }
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+  .badge-green  { @apply badge bg-green-100 text-green-700; }
+  .badge-red    { @apply badge bg-red-100 text-red-700; }
+  .badge-orange { @apply badge bg-orange-100 text-orange-700; }
+  .badge-blue   { @apply badge bg-blue-100 text-blue-700; }
+  .page-title {
+    @apply text-2xl font-bold text-slate-800;
+  }
+  .page-subtitle {
+    @apply text-sm text-slate-500 mt-0.5;
+  }
+  .section-title {
+    @apply text-base font-semibold text-slate-700 mb-4;
+  }
+}

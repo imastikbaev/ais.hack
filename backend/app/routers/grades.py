@@ -1,0 +1,227 @@
+from fastapi import APIRouter, Depends, Query
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from typing import List, Optional
+from collections import defaultdict
+from app.core.database import get_db
+from app.core.security import get_current_user, require_roles
+from app.models.user import User
+from app.models.grade import Grade
+from app.models.subject import Subject, Topic
+from app.schemas.grades import GradeOut
+
+router = APIRouter(prefix="/grades", tags=["grades"])
+
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+def _subject_stats(grades: list) -> dict:
+    """Compute simple stats for a list of Grade ORM objects."""
+    values = sorted([g.value for g in grades], key=lambda _: 0)  # preserve insertion order
+    # re-sort by date for trend
+    sorted_by_date = sorted(grades, key=lambda g: g.date)
+    values_chron = [g.value for g in sorted_by_date]
+
+    avg = round(sum(values_chron) / len(values_chron), 2)
+
+    # Trend: compare first-half average vs second-half average
+    mid = len(values_chron) // 2
+    if mid >= 1:
+        first_half_avg = sum(values_chron[:mid]) / mid
+        second_half_avg = sum(values_chron[mid:]) / (len(values_chron) - mid)
+        trend_slope = round((second_half_avg - first_half_avg) / 5.0, 3)
+    else:
+        trend_slope = 0.0
+
+    # "needs_attention" score – purely grade-based: 0 = great (avg 5), 1 = bad (avg 1)
+    needs_attention = round(max(0.0, min(1.0, (4.0 - avg) / 3.0)), 3)
+
+    # Weak topics: any topic whose average is below 3.5
+    topic_buckets: dict = defaultdict(list)
+    for g in grades:
+        if g.topic_id:
+            topic_buckets[g.topic_id].append(g.value)
+    weak_topic_ids = [
+        tid for tid, vals in topic_buckets.items()
+        if sum(vals) / len(vals) < 3.5
+    ]
+
+    return {
+        "average": avg,
+        "trend_slope": trend_slope,
+        "needs_attention": needs_attention,
+        "weak_topic_ids": weak_topic_ids,
+        "grades_count": len(values_chron),
+    }
+
+
+# ── Student grades ─────────────────────────────────────────────────────────────
+
+@router.get("/my", response_model=List[GradeOut])
+async def get_my_grades(
+    quarter: Optional[int] = None,
+    subject_id: Optional[int] = None,
+    current_user: User = Depends(require_roles("student")),
+    db: AsyncSession = Depends(get_db),
+):
+    query = select(Grade).where(Grade.student_id == current_user.id)
+    if quarter:
+        query = query.where(Grade.quarter == quarter)
+    if subject_id:
+        query = query.where(Grade.subject_id == subject_id)
+    result = await db.execute(query.order_by(Grade.date.desc()))
+    grades = result.scalars().all()
+
+    grade_list = []
+    for g in grades:
+        subj_res = await db.execute(select(Subject).where(Subject.id == g.subject_id))
+        subj = subj_res.scalar_one_or_none()
+        topic_name = None
+        if g.topic_id:
+            topic_res = await db.execute(select(Topic).where(Topic.id == g.topic_id))
+            topic = topic_res.scalar_one_or_none()
+            topic_name = topic.name if topic else None
+        grade_list.append(GradeOut(
+            id=g.id,
+            student_id=g.student_id,
+            subject_id=g.subject_id,
+            subject_name=subj.name if subj else None,
+            topic_id=g.topic_id,
+            topic_name=topic_name,
+            value=g.value,
+            grade_type=g.grade_type,
+            date=g.date,
+            quarter=g.quarter,
+        ))
+    return grade_list
+
+
+# ── Student analytics (real DB data) ──────────────────────────────────────────
+
+@router.get("/analytics/me")
+async def get_my_analytics(
+    current_user: User = Depends(require_roles("student")),
+    db: AsyncSession = Depends(get_db),
+):
+    grades_result = await db.execute(
+        select(Grade).where(Grade.student_id == current_user.id).order_by(Grade.date)
+    )
+    grades = grades_result.scalars().all()
+
+    subj_result = await db.execute(select(Subject))
+    subjects = subj_result.scalars().all()
+
+    grades_by_subject: dict = defaultdict(list)
+    for g in grades:
+        grades_by_subject[g.subject_id].append(g)
+
+    subject_results = []
+    for subj in subjects:
+        subj_grades = grades_by_subject.get(subj.id, [])
+        if not subj_grades:
+            continue
+        stats = _subject_stats(subj_grades)
+        subject_results.append({
+            "subject_id": subj.id,
+            "subject_name": subj.name,
+            "average": stats["average"],
+            "trend_score": stats["average"],      # kept for compat
+            "trend_slope": stats["trend_slope"],
+            "risk_score": stats["needs_attention"],  # kept for compat (is 0..1 grade-based)
+            "gap_topic_ids": stats["weak_topic_ids"],
+            "recommendations": [],
+            "grades_count": stats["grades_count"],
+        })
+
+    if not subject_results:
+        return {
+            "student_id": current_user.id,
+            "student_name": current_user.name,
+            "subjects": [],
+            "overall_risk": 0.0,
+            "high_risk_subjects": [],
+            "recommendations": [],
+        }
+
+    overall_avg = sum(s["average"] for s in subject_results) / len(subject_results)
+    overall_needs_attention = round(max(0.0, min(1.0, (4.0 - overall_avg) / 3.0)), 3)
+
+    # "Weak" = average below 3.5
+    weak_subjects = [s["subject_name"] for s in subject_results if s["average"] < 3.5]
+
+    return {
+        "student_id": current_user.id,
+        "student_name": current_user.name,
+        "subjects": subject_results,
+        "overall_risk": overall_needs_attention,
+        "high_risk_subjects": weak_subjects,
+        "recommendations": [],
+    }
+
+
+# ── Class analytics (real DB data) ────────────────────────────────────────────
+
+@router.get("/analytics/class/{class_id}")
+async def get_class_analytics(
+    class_id: int,
+    current_user: User = Depends(require_roles("teacher", "admin")),
+    db: AsyncSession = Depends(get_db),
+):
+    students_result = await db.execute(
+        select(User).where(User.class_id == class_id, User.role == "student")
+    )
+    students = students_result.scalars().all()
+
+    subj_result = await db.execute(select(Subject))
+    subjects = subj_result.scalars().all()
+
+    all_analytics = []
+    for student in students:
+        grades_result = await db.execute(
+            select(Grade).where(Grade.student_id == student.id).order_by(Grade.date)
+        )
+        grades = grades_result.scalars().all()
+        grades_by_subject: dict = defaultdict(list)
+        for g in grades:
+            grades_by_subject[g.subject_id].append(g)
+
+        subject_results = []
+        for subj in subjects:
+            subj_grades = grades_by_subject.get(subj.id, [])
+            if not subj_grades:
+                continue
+            stats = _subject_stats(subj_grades)
+            subject_results.append({
+                "subject_id": subj.id,
+                "subject_name": subj.name,
+                "average": stats["average"],
+                "risk_score": stats["needs_attention"],
+                "grades_count": stats["grades_count"],
+            })
+
+        if subject_results:
+            overall_avg = sum(s["average"] for s in subject_results) / len(subject_results)
+        else:
+            overall_avg = 0.0
+
+        all_analytics.append({
+            "student_id": student.id,
+            "student_name": student.name,
+            "subjects": subject_results,
+            "overall_risk": round(max(0.0, min(1.0, (4.0 - overall_avg) / 3.0)), 3),
+            "overall_avg": round(overall_avg, 2),
+        })
+
+    return {"class_id": class_id, "students": all_analytics}
+
+
+# ── Legacy mock routes (kept for backward compat) ─────────────────────────────
+
+@router.get("/mock/subjects")
+async def get_mock_subjects():
+    return []
+
+
+@router.get("/mock/student/{student_id}")
+async def get_mock_student_grades(student_id: int):
+    return []
