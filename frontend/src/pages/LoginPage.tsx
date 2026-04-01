@@ -4,10 +4,10 @@ import { authApi } from '../api';
 import { useAuthStore } from '../stores/authStore';
 
 const demoAccounts = [
-  { label: 'Ученик 1',   sublabel: '10А класс',            email: 'student1@aqbobek.kz',  password: 'student123' },
-  { label: 'Учитель',    sublabel: 'Учитель математики',   email: 'math@aqbobek.kz',      password: 'teacher123' },
-  { label: 'Родитель 1', sublabel: 'Родитель Ученика 1',   email: 'parent1@aqbobek.kz',   password: 'parent123'  },
-  { label: 'Управление школы', sublabel: 'Администратор лицея', email: 'admin@aqbobek.kz', password: 'admin123' },
+  { label: 'Арман Алибеков',   sublabel: '10А класс · Ученик',         email: 'student1@aqbobek.kz',  password: 'password123' },
+  { label: 'Бекжан Жуматов',   sublabel: 'Учитель математики',         email: 'math@aqbobek.kz',      password: 'password123' },
+  { label: 'Жанар Алибекова',  sublabel: 'Родитель',                   email: 'parent1@aqbobek.kz',   password: 'password123' },
+  { label: 'Управление школы', sublabel: 'Администратор лицея',        email: 'admin@aqbobek.kz',     password: 'password123' },
 ];
 
 export default function LoginPage() {

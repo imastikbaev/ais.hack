@@ -35,7 +35,7 @@ export default function App() {
           <Route element={<AppLayout allowedRoles={['student']} />}>
             <Route path="/student" element={<StudentDashboard />} />
             <Route path="/student/grades" element={<GradesPage />} />
-            <Route path="/student/ai" element={<AITutorPage />} />
+            <Route path="/student/performance" element={<AITutorPage />} />
             <Route path="/student/schedule" element={<SchedulePage />} />
             <Route path="/student/portfolio" element={<GamificationPage />} />
             <Route path="/student/gamification" element={<GamificationPage />} />

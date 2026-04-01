@@ -17,36 +17,32 @@
 
 ## Стек
 
-- **Frontend:** React 18 + Vite + TypeScript + Tailwind CSS + Zustand
+- **Frontend:** React 19 + Vite + TypeScript + Tailwind CSS + Zustand
 - **Backend:** FastAPI + SQLAlchemy (async)
-- **БД:** PostgreSQL 15
-- **Кэш / real-time:** Redis + WebSockets
-- **Деплой:** Docker + docker-compose
+- **БД:** SQLite (файл создаётся автоматически)
+- **Real-time:** WebSockets
 
 ## Быстрый старт
 
+Требования: **Python 3.11–3.13** (не 3.14+), **Node.js 18+**
+
 ```bash
-cp .env.example .env
-docker-compose up --build
+# Backend (терминал 1)
+cd backend
+python3 -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+
+# Frontend (терминал 2)
+cd frontend
+npm install
+npm run dev
 ```
 
 - Frontend → http://localhost:5173
 - API docs → http://localhost:8000/docs
 - Kiosk → http://localhost:5173/kiosk
-
-### Без Docker
-
-```bash
-# Backend
-cd backend
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-
-# Frontend (в отдельном терминале)
-cd frontend
-npm install && npm run dev
-```
 
 ## Тестовые аккаунты
 
@@ -55,7 +51,7 @@ npm install && npm run dev
 | Логин | Пароль | Роль |
 |-------|--------|------|
 | student1@aqbobek.kz | password123 | Ученик |
-| teacher1@aqbobek.kz | password123 | Учитель |
+| math@aqbobek.kz | password123 | Учитель |
 | admin@aqbobek.kz | password123 | Администратор |
 | parent1@aqbobek.kz | password123 | Родитель |
 | kiosk@aqbobek.kz | password123 | Kiosk (экран в коридоре) |

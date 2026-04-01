@@ -28,7 +28,7 @@ const studentGroups: NavGroup[] = [
     labelKey: 'study',
     items: [
       { path: '/student/grades',   labelKey: 'grades',       icon: <IconBarChart /> },
-      { path: '/student/ai',       labelKey: 'performance',  icon: <IconTrendUp /> },
+      { path: '/student/performance', labelKey: 'performance',  icon: <IconTrendUp /> },
       { path: '/student/schedule', labelKey: 'schedule',     icon: <IconCalendar /> },
       { path: '/student/kundelik', labelKey: 'kundelik',     icon: <IconBookOpen /> },
     ],

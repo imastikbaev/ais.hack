@@ -359,9 +359,9 @@ async def seed():
 
         # ── Администратор ────────────────────────────────────────────────
         admin = User(
-            name="Директор лицея",
+            name="Сулейменов Асхат Бекович",
             email="admin@aqbobek.kz",
-            hashed_password=hash_password("admin123"),
+            hashed_password=hash_password("password123"),
             role=UserRole.admin,
         )
         db.add(admin)
@@ -369,17 +369,17 @@ async def seed():
 
         # ── Учителя ─────────────────────────────────────────────────────
         teacher_users = [
-            ("Учитель по математике",    "math@aqbobek.kz",    [1, 2]),
-            ("Учитель по физике",        "physics@aqbobek.kz", [2, 6]),
-            ("Учитель по химии",         "chem@aqbobek.kz",    [3, 4]),
-            ("Учитель по английскому",   "eng@aqbobek.kz",     [7]),
-            ("Учитель по казахскому",    "kaz@aqbobek.kz",     [9, 8]),
-            ("Учитель по информатике",   "it@aqbobek.kz",      [10]),
+            ("Жуматов Бекжан Серикович",    "math@aqbobek.kz",    [1, 2]),
+            ("Сейтжанова Гульнара Маратовна","physics@aqbobek.kz", [2, 6]),
+            ("Ахметова Айгуль Нурлановна",  "chem@aqbobek.kz",    [3, 4]),
+            ("Байсалов Дамир Ерланович",    "eng@aqbobek.kz",     [7]),
+            ("Нурбекова Зарина Асылбековна","kaz@aqbobek.kz",     [9, 8]),
+            ("Касымов Тимур Болатович",     "it@aqbobek.kz",      [10]),
         ]
         teachers = []
         for name, email, subj_ids in teacher_users:
             u = User(name=name, email=email,
-                     hashed_password=hash_password("teacher123"),
+                     hashed_password=hash_password("password123"),
                      role=UserRole.teacher)
             db.add(u)
             await db.flush()
@@ -390,25 +390,25 @@ async def seed():
 
         # ── Ученики ─────────────────────────────────────────────────────
         student_names = [
-            "Ученик 1",
-            "Ученик 2",
-            "Ученик 3",
-            "Ученик 4",
-            "Ученик 5",
-            "Ученик 6",
-            "Ученик 7",
-            "Ученик 8",
-            "Ученик 9",
-            "Ученик 10",
-            "Ученик 11",
-            "Ученик 12",
+            "Алибеков Арман Данияров",
+            "Сейткали Диана Маратовна",
+            "Жаксыбеков Нурлан Ержанов",
+            "Омарова Айдана Болатовна",
+            "Бекова Медина Асылбековна",
+            "Султанов Тимур Ерланович",
+            "Абенова Карина Нурлановна",
+            "Джаксыбеков Даниил Маратов",
+            "Назарова Алина Сериковна",
+            "Байжанов Ержан Болатов",
+            "Токтарова Сабина Дамировна",
+            "Ахметов Ильяс Тимурович",
         ]
         students = []
         for i, name in enumerate(student_names):
             email = f"student{i+1}@aqbobek.kz"
             cls = classes[i % len(classes)]
             u = User(name=name, email=email,
-                     hashed_password=hash_password("student123"),
+                     hashed_password=hash_password("password123"),
                      role=UserRole.student,
                      class_id=cls.id)
             db.add(u)
@@ -424,20 +424,20 @@ async def seed():
         db.add(User(
             name="Киоск",
             email="kiosk@aqbobek.kz",
-            hashed_password=hash_password("kiosk123"),
+            hashed_password=hash_password("password123"),
             role=UserRole.kiosk,
         ))
 
         # ── Родитель ─────────────────────────────────────────────────────
         parent_user = User(
-            name="Родитель 1",
+            name="Алибекова Жанар Сейткалиевна",
             email="parent1@aqbobek.kz",
-            hashed_password=hash_password("parent123"),
+            hashed_password=hash_password("password123"),
             role=UserRole.parent,
         )
         db.add(parent_user)
         await db.flush()
-        # Привязываем к Ученику 1 (students[0])
+        # Привязываем к students[0] (Арман Алибеков)
         db.add(ParentLink(parent_id=parent_user.id, student_id=students[0].id, is_verified=1))
 
         # ── Оценки ──────────────────────────────────────────────────────
@@ -502,7 +502,7 @@ async def seed():
                 author_id=admin.id,
                 student_id=students[0].id,
                 title="Победитель республиканской олимпиады по математике",
-                description="Ученик 1 занял 1 место на республиканской олимпиаде по математике среди учеников 10 классов. Поздравляем!",
+                description="Арман Алибеков занял 1 место на республиканской олимпиаде по математике среди учеников 10 классов. Поздравляем!",
                 tags=["Олимпиада", "Наука"],
                 status="approved",
                 likes_count=24,
@@ -511,7 +511,7 @@ async def seed():
                 author_id=admin.id,
                 student_id=students[1].id,
                 title="Серебро на городских соревнованиях по плаванию",
-                description="Ученик 2 завоевал серебряную медаль на городских соревнованиях по плаванию. Отличный результат!",
+                description="Диана Сейткали завоевала серебряную медаль на городских соревнованиях по плаванию. Отличный результат!",
                 tags=["Спорт"],
                 status="approved",
                 likes_count=18,
@@ -520,7 +520,7 @@ async def seed():
                 author_id=admin.id,
                 student_id=students[6].id,
                 title="Победитель конкурса научных проектов",
-                description="Ученик 7 представил исследовательский проект по экологии и занял 1 место на районном этапе конкурса.",
+                description="Карина Абенова представила исследовательский проект по экологии и заняла 1 место на районном этапе конкурса.",
                 tags=["Наука", "Олимпиада"],
                 status="approved",
                 likes_count=31,
@@ -529,7 +529,7 @@ async def seed():
                 author_id=admin.id,
                 student_id=students[4].id,
                 title="Призёр городской олимпиады по физике",
-                description="Ученик 5 занял 3 место на городской олимпиаде по физике. Продолжаем в том же духе!",
+                description="Медина Бекова заняла 3 место на городской олимпиаде по физике. Продолжаем в том же духе!",
                 tags=["Олимпиада"],
                 status="approved",
                 likes_count=15,
@@ -538,7 +538,7 @@ async def seed():
                 author_id=admin.id,
                 student_id=students[8].id,
                 title="Лучшее эссе на конкурсе по казахскому языку",
-                description="Ученик 9 написал лучшее сочинение на конкурсе «Мой Казахстан» среди школ района.",
+                description="Алина Назарова написала лучшее сочинение на конкурсе «Мой Казахстан» среди школ района.",
                 tags=["Искусство"],
                 status="approved",
                 likes_count=12,
@@ -547,7 +547,7 @@ async def seed():
                 author_id=admin.id,
                 student_id=students[3].id,
                 title="Призёр областной олимпиады по биологии",
-                description="Ученик 4 занял 2 место на областной олимпиаде по биологии — отличный результат!",
+                description="Айдана Омарова заняла 2 место на областной олимпиаде по биологии — отличный результат!",
                 tags=["Наука", "Олимпиада"],
                 status="pending",
                 likes_count=0,
@@ -556,7 +556,7 @@ async def seed():
                 author_id=admin.id,
                 student_id=students[10].id,
                 title="Капитан школьной команды КВН",
-                description="Ученик 11 возглавил команду лицея на городском фестивале КВН. Команда прошла в финал!",
+                description="Сабина Токтарова возглавила команду лицея на городском фестивале КВН. Команда прошла в финал!",
                 tags=["Искусство"],
                 status="pending",
                 likes_count=0,
