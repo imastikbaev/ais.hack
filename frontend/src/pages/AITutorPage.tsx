@@ -28,7 +28,7 @@ function RiskMeter({ risk }: { risk: number }) {
   return (
     <div className="card border-l-4" style={{ borderLeftColor: color }}>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-semibold text-slate-700">AI Risk Score</span>
+        <span className="text-sm font-semibold text-slate-700">Риск по успеваемости</span>
         <span className="text-2xl font-black" style={{ color }}>{pct}%</span>
       </div>
       <p className="text-sm text-slate-600 mb-3">{label}</p>
@@ -181,7 +181,7 @@ export default function AITutorPage() {
       {/* Global recommendations */}
       {allRecs.length > 0 && (
         <div className="card">
-          <h3 className="font-semibold text-slate-700 mb-3">📚 Рекомендованные материалы</h3>
+          <h3 className="font-semibold text-slate-700 mb-3">Рекомендованные материалы</h3>
           <div className="space-y-2">
             {allRecs.slice(0, 6).map((r, i) => (
               <a key={i} href={r.url} target="_blank" rel="noopener noreferrer"

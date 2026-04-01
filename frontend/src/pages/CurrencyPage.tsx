@@ -78,8 +78,8 @@ export default function CurrencyPage() {
 
       <div className="flex gap-2">
         {[
-          { key: 'menu', label: '🍽 ' + t('menu_tab'), icon: <IconUtensils className="w-4 h-4" /> },
-          { key: 'orders', label: '📋 ' + t('my_orders'), icon: <IconClipboard className="w-4 h-4" /> },
+          { key: 'menu', label: t('menu_tab'), icon: <IconUtensils className="w-4 h-4" /> },
+          { key: 'orders', label: t('my_orders'), icon: <IconClipboard className="w-4 h-4" /> },
         ].map(tb => (
           <button key={tb.key} onClick={() => setTab(tb.key as any)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${tab === tb.key ? 'bg-primary-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
